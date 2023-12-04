@@ -1,0 +1,128 @@
+{{
+    var today=new Date();
+    var fullYear=today.getFullYear();
+    var month=today.getMonth() + 1<10?"0"+today.getMonth():today.getMonth();
+    var days=today.getDate()<10?"0"+today.getDate():today.getDate();
+    var hours = today.getHours()<10?"0"+today.getHours():today.getHours();         
+	var minutes = today.getMinutes()<10?"0"+today.getMinutes():today.getMinutes();      
+	var seconds = today.getSeconds()<10?"0"+today.getSeconds():today.getSeconds();    
+	var camelName = it.func.camel(it.entity.defKey,true);
+	var filterFields = [
+	  "id",
+      "created_at",
+      "created_by",
+      "updated_at",
+      "updated_by",
+      "deleted_at",
+      "deleted_by",
+    ];
+    var fields = it.entity.fields.filter((item) => !filterFields.includes(item.defKey));
+}}// Package v1 {{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+// author : https://github.com/Wyatex
+// date : {{=fullYear}}-{{=month}}-{{=days}} {{=hours}}:{{=minutes}}
+// desc : {{=it.func.join(it.entity.defName,it.entity.comment,'，')}} api定义
+package v1
+
+$blankline
+
+import (
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
+	"pdmaner-test/internal/model"
+	"pdmaner-test/internal/model/entity"
+)
+
+$blankline
+
+type {{=camelName}}AddReq struct {
+	g.Meta      `path:"/{{=it.entity.defKey}}/v1/add" tags:"{{=camelName}}" method:"post" summary:"创建一个{{=it.entity.defName}}"`{{~fields:field:index}}
+	{{
+	    let jsonName = it.func.camel(field.defKey,false);
+	    let tag = '`json:"' + jsonName + '" dc:"{{=field.defName}}"';
+	    if (field.notNull) {
+	        tag += ' v:"required#' + field.defName + '不能为空"`';
+	    } else {
+	        tag += '`'
+	    }
+	}}{{=it.func.camel(field.defKey,true)}} {{=field.type}} {{=tag}}
+    {{~}}
+}
+
+$blankline
+
+type {{=camelName}}AddRes bool
+
+$blankline
+
+type {{=camelName}}EditReq struct {
+	g.Meta      `path:"/{{=it.entity.defKey}}/v1/edit" tags:"{{=camelName}}" method:"post" summary:"编辑{{=it.entity.defName}}"`
+	{{~it.entity.fields:field:index}}{{
+	    let jsonName = it.func.camel(field.defKey,false);
+	    let tag = '`json:"' + jsonName + '" dc:"{{=field.defName}}"';
+	    if (field.notNull) {
+	        tag += ' v:"required#' + field.defName + '不能为空"`';
+	    } else {
+	        tag += '`'
+	    }
+	}}{{=it.func.camel(field.defKey,true)}} {{=field.type}} {{=tag}}
+	{{~}}
+}
+
+$blankline
+
+type {{=camelName}}EditRes struct{}
+
+$blankline
+
+type {{=camelName}}DelReq struct {
+    g.Meta      `path:"/{{=it.entity.defKey}}/v1/del" tags:"{{=camelName}}" method:"post" summary:"删除{{=it.entity.defName}}"`
+    Id *int `json:"id" dc:"删除单个id"`
+    Ids []int `json:"ids" dc:"批量删除"`
+}
+
+$blankline
+
+type {{=camelName}}DelRes struct{}
+
+$blankline
+
+type {{=camelName}}FindOneReq struct {
+    g.Meta      `path:"/{{=it.entity.defKey}}/v1/fine_one" tags:"{{=camelName}}" method:"post" summary:"根据id查询{{=it.entity.defName}}"`
+    Id int `json:"id" dc:"删除单个id" v:"required#id不能为空"`
+}
+
+$blankline
+
+type {{=camelName}}FindOneRes entity.{{=camelName}}
+
+$blankline
+
+type {{=camelName}}PageReq struct {
+    g.Meta      `path:"/{{=it.entity.defKey}}/v1/page" tags:"{{=camelName}}" method:"post" summary:"分页查询{{=it.entity.defName}}"`
+    {{~fields:field:index}}{{=it.func.camel(field.defKey,true)}} {{=field.type}} `json:"{{=it.func.camel(field.defKey,false)}}" dc:"{{=field.defName}}"`
+	{{~}}CreatedStart *gtime.Time `json:"createdStart" dc:"搜索创建时间范围"`
+    CreatedEnd *gtime.Time `json:"createdEnd" dc:"搜索创建时间范围"`
+    UpdatedStart *gtime.Time `json:"updatedStart" dc:"搜索更新时间范围"`
+    UpdatedEnd *gtime.Time `json:"updatedEnd" dc:"搜索更新时间范围"`
+    PageNo int `json:"pageNo" dc:"查找第几页" v:"required#查询页数不能为空"`
+    PageItem int `json:"pageItem" dc:"每页个数" v:"required#每页个数不能为空"`
+}
+
+$blankline
+
+type {{=camelName}}PageRes model.{{=camelName}}FindPageOutput
+
+$blankline
+
+type {{=camelName}}ListReq struct{
+    g.Meta      `path:"/{{=it.entity.defKey}}/v1/list" tags:"{{=camelName}}" method:"post" summary:"查询所有{{=it.entity.defName}}"`
+    {{~fields:field:index}}{{=it.func.camel(field.defKey,true)}} {{=field.type}} `json:"{{=it.func.camel(field.defKey,false)}}" dc:"{{=field.defName}}"`
+	{{~}}CreatedStart *gtime.Time `json:"createdStart" dc:"搜索创建时间范围"`
+    CreatedEnd *gtime.Time `json:"createdEnd" dc:"搜索创建时间范围"`
+    UpdatedStart *gtime.Time `json:"updatedStart" dc:"搜索更新时间范围"`
+    UpdatedEnd *gtime.Time `json:"updatedEnd" dc:"搜索更新时间范围"`
+}
+
+type {{=camelName}}ListRes []entity.{{=camelName}}
+
+$blankline

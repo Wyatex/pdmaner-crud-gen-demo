@@ -1,0 +1,78 @@
+{{
+    var today=new Date();
+    var fullYear=today.getFullYear();
+    var month=today.getMonth() + 1<10?"0"+today.getMonth():today.getMonth();
+    var days=today.getDate()<10?"0"+today.getDate():today.getDate();
+    var hours = today.getHours()<10?"0"+today.getHours():today.getHours();         
+	var minutes = today.getMinutes()<10?"0"+today.getMinutes():today.getMinutes();      
+	var seconds = today.getSeconds()<10?"0"+today.getSeconds():today.getSeconds();    
+	var camelName = it.func.camel(it.entity.defKey,true);
+}}
+
+func (c *ControllerV1) {{=camelName}}Add(ctx context.Context, req *v1.{{=camelName}}AddReq) (res *v1.{{=camelName}}AddRes, err error) {
+	var in *model.{{=camelName}}AddInput
+	err = gconv.Struct(req, in)
+	if err != nil {
+		return nil, err
+	}
+	err = service.{{=camelName}}().Add(ctx, in)
+	return nil, err
+}
+
+$blankline
+
+func (c *ControllerV1) {{=camelName}}Del(ctx context.Context, req *v1.{{=camelName}}DelReq) (res *v1.{{=camelName}}DelRes, err error) {
+	IdOrIdsNil := gcode.New(-1, "id或者ids不能为空", nil)
+	if req.Id == nil {
+		if req.Ids == nil {
+			return nil, gerror.NewCode(IdOrIdsNil)
+		} else if len(req.Ids) == 0 {
+			return nil, gerror.NewCode(IdOrIdsNil)
+		}
+	}
+	err = service.{{=camelName}}().Delete(ctx, req.Id, req.Ids)
+	return nil, err
+}
+
+$blankline
+
+func (c *ControllerV1) {{=camelName}}Edit(ctx context.Context, req *v1.{{=camelName}}EditReq) (res *v1.{{=camelName}}EditRes, err error) {
+	var in *entity.{{=camelName}}
+	err = gconv.Struct(req, in)
+	if err != nil {
+		return nil, err
+	}
+	err = service.{{=camelName}}().Edit(ctx, in)
+	return nil, err
+}
+
+$blankline
+
+func (c *ControllerV1) {{=camelName}}FindOne(ctx context.Context, req *v1.{{=camelName}}FindOneReq) (res *v1.{{=camelName}}FindOneRes, err error) {
+	m, err := service.{{=camelName}}().FindOne(ctx, req.Id)
+	return (*v1.{{=camelName}}FindOneRes)(m), gerror.NewCode(gcode.CodeNotImplemented)
+}
+
+$blankline
+
+func (c *ControllerV1) {{=camelName}}List(ctx context.Context, req *v1.{{=camelName}}ListReq) (res *v1.{{=camelName}}ListRes, err error) {
+	var in *model.{{=camelName}}FindListInput
+	err = gconv.Struct(req, in)
+	if err != nil {
+		return nil, err
+	}
+	list, err := service.{{=camelName}}().FindList(ctx, in)
+	return (*v1.{{=camelName}}ListRes)(&list), err
+}
+
+$blankline
+
+func (c *ControllerV1) {{=camelName}}Page(ctx context.Context, req *v1.{{=camelName}}PageReq) (res *v1.{{=camelName}}PageRes, err error) {
+	var in *model.{{=camelName}}FindPageInput
+	err = gconv.Struct(req, in)
+	if err != nil {
+		return nil, err
+	}
+	list, err := service.{{=camelName}}().FindPage(ctx, in)
+	return (*v1.{{=camelName}}PageRes)(list), err
+}

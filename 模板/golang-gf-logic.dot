@@ -1,0 +1,184 @@
+{{
+    var today=new Date();
+    var fullYear=today.getFullYear();
+    var month=today.getMonth() + 1<10?"0"+today.getMonth():today.getMonth();
+    var days=today.getDate()<10?"0"+today.getDate():today.getDate();
+    var hours = today.getHours()<10?"0"+today.getHours():today.getHours();         
+	var minutes = today.getMinutes()<10?"0"+today.getMinutes():today.getMinutes();      
+	var seconds = today.getSeconds()<10?"0"+today.getSeconds():today.getSeconds();    
+	var camelName = it.func.camel(it.entity.defKey,true);
+	var filterFields = [
+	  "id",
+      "created_at",
+      "created_by",
+      "updated_at",
+      "updated_by",
+      "deleted_at",
+      "deleted_by",
+    ];
+    var fields = it.entity.fields.filter((item) => !filterFields.includes(item.defKey));
+}}// Package {{=it.entity.defKey}} {{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+// author : https://github.com/Wyatex
+// date : {{=fullYear}}-{{=month}}-{{=days}} {{=hours}}:{{=minutes}}
+// desc : {{=it.func.join(it.entity.defName,it.entity.comment,'，')}} logic代码
+package {{=it.entity.defKey}}
+
+$blankline
+
+import (
+	"context"
+	"math"
+	"pdmaner-test/internal/dao"
+	"pdmaner-test/internal/model"
+	"pdmaner-test/internal/model/entity"
+	"pdmaner-test/internal/service"
+)
+
+$blankline
+
+type s{{=camelName}} struct{}
+
+$blankline
+
+func init() {
+	service.RegisterLbraCatalog(New())
+}
+
+$blankline
+
+func New() *sLbraCatalog {
+	return &sLbraCatalog{}
+}
+
+$blankline
+
+// Add 添加一个{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+func (s *s{{=camelName}}) Add(ctx context.Context, in *model.{{=camelName}}AddInput) error {
+    uid := service.BizCtx().Get(ctx).User.Id
+	in.CreatedBy = uid
+	_, err := dao.{{=camelName}}.Ctx(ctx).Insert(in)
+	return err
+}
+
+$blankline
+
+// Edit 编辑{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+func (s *s{{=camelName}}) Edit(ctx context.Context, in *entity.{{=camelName}}) error {
+    uid := service.BizCtx().Get(ctx).User.Id
+	in.UpdatedBy = uid
+	_, err := dao.{{=camelName}}.Ctx(ctx).Update(in, "id", in.Id)
+	return err
+}
+
+$blankline
+
+// Delete 删除{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+func (s *s{{=camelName}}) Delete(ctx context.Context, id *int, ids []int) (err error) {
+    uid := service.BizCtx().Get(ctx).User.Id
+	if id != nil {
+		_, err = dao.{{=camelName}}.Ctx(ctx).Data(g.Map{"deleted_by" : uid}).Where("id", id).Update()
+	} else {
+		_, err = dao.{{=camelName}}.Ctx(ctx).Data(g.Map{"deleted_by" : uid}).WhereIn("id", ids).Update()
+	}
+	if err != nil {
+		return err
+	}
+	if id != nil {
+		_, err = dao.{{=camelName}}.Ctx(ctx).Where("id", id).Delete()
+	} else {
+		_, err = dao.{{=camelName}}.Ctx(ctx).WhereIn("id", ids).Delete()
+	}
+	return err
+}
+
+$blankline
+
+// FindOne 根据id查找{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+func (s *s{{=camelName}}) FindOne(ctx context.Context, id int) (*entity.{{=camelName}}, error) {
+	var m *entity.{{=camelName}}
+	err := dao.{{=camelName}}.Ctx(ctx).Where("id", id).Scan(&m)
+	return m, err
+}
+
+$blankline
+
+// FindPage 分页查询{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+func (s *s{{=camelName}}) FindPage(ctx context.Context, in *model.{{=camelName}}FindPageInput) (*model.{{=camelName}}FindPageOutput, error) {
+	orm := dao.{{=camelName}}.Ctx(ctx).Safe(false)
+	items := make([]entity.{{=camelName}}, 0)
+	total := 0{{~fields:field:index}}
+	{{
+	    let fieldCamelName = it.func.camel(field.defKey,true);
+	    let fieldType = field.type;
+	    let condition = 'nil';
+	    let whereCondition = 'Where';
+	    let whereData = 'in.' + fieldCamelName;
+	    if (fieldType === 'string') {
+	        condition = '""';
+	        whereCondition = 'WhereLike';
+	        whereData = '"%"+' + whereData + '+"%"';
+	    }
+	}}if in.{{=it.func.camel(field.defKey,true)}} != {{=condition}} {
+        orm.{{=whereCondition}}(dao.{{=camelName}}.Columns().{{=fieldCamelName}}, {{=whereData}})
+    }
+    {{~}}
+    if in.CreatedStart != nil {
+		orm.WhereGTE(dao.LbraCatalog.Columns().CreatedAt, in.CreatedStart)
+	}
+	if in.CreatedEnd != nil {
+		orm.WhereLT(dao.LbraCatalog.Columns().CreatedAt, in.CreatedEnd)
+	}
+	if in.UpdatedStart != nil {
+		orm.WhereGTE(dao.LbraCatalog.Columns().UpdatedAt, in.UpdatedStart)
+	}
+	if in.UpdatedEnd != nil {
+		orm.WhereLT(dao.LbraCatalog.Columns().UpdatedAt, in.UpdatedEnd)
+	}
+	err := orm.Limit((in.PageNo-1)*in.PageItem, in.PageItem).
+		ScanAndCount(&items, &total, true)
+	if err != nil {
+		return nil, err
+	}
+	return &model.{{=camelName}}FindPageOutput{
+		List:      items,
+		ItemCount: total,
+		PageCount: int(math.Ceil(float64(total) / float64(in.PageItem))),
+		PageItem:  in.PageItem,
+		PageNo:    in.PageNo,
+	}, nil
+}
+
+$blankline
+
+// FindList 查找所有{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+func (s *s{{=camelName}}) FindList(ctx context.Context, in *model.{{=camelName}}FindListInput) ([]entity.{{=camelName}}, error) {
+	orm := dao.{{=camelName}}.Ctx(ctx).Safe(false)
+	items := make([]entity.{{=camelName}}, 0){{~fields:field:index}}
+	{{
+	    let fieldCamelName = it.func.camel(field.defKey,true);
+	    let fieldType = field.type;
+	    let condition = 'nil';
+	    let whereCondition = 'Where';
+	    if (fieldType === 'string') {
+	        condition = '""';
+	        whereCondition = 'WhereLike';
+	    }
+	}}if in.{{=it.func.camel(field.defKey,true)}} != {{=condition}} {
+        orm.{{=whereCondition}}(dao.{{=camelName}}.Columns().{{=fieldCamelName}}, in.{{=fieldCamelName}})
+    }
+    {{~}}
+    if in.CreatedStart != nil {
+		orm.WhereGTE(dao.LbraCatalog.Columns().CreatedAt, in.CreatedStart)
+	}
+	if in.CreatedEnd != nil {
+		orm.WhereLT(dao.LbraCatalog.Columns().CreatedAt, in.CreatedEnd)
+	}
+	if in.UpdatedStart != nil {
+		orm.WhereGTE(dao.LbraCatalog.Columns().UpdatedAt, in.UpdatedStart)
+	}
+	if in.UpdatedEnd != nil {
+		orm.WhereLT(dao.LbraCatalog.Columns().UpdatedAt, in.UpdatedEnd)
+	}
+	err := orm.Scan(&items)
+	return items, err
+}

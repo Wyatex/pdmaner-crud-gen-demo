@@ -1,0 +1,80 @@
+{{
+    var today=new Date();
+    var fullYear=today.getFullYear();
+    var month=today.getMonth() + 1<10?"0"+today.getMonth():today.getMonth();
+    var days=today.getDate()<10?"0"+today.getDate():today.getDate();
+    var hours = today.getHours()<10?"0"+today.getHours():today.getHours();         
+	var minutes = today.getMinutes()<10?"0"+today.getMinutes():today.getMinutes();      
+	var seconds = today.getSeconds()<10?"0"+today.getSeconds():today.getSeconds();
+	var filterFields = [
+	  "id",
+      "created_at",
+      "created_by",
+      "updated_at",
+      "updated_by",
+      "deleted_at",
+      "deleted_by",
+    ];
+    var fields = it.entity.fields.filter((item) => !filterFields.includes(item.defKey));
+}}// Package model {{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+// author : https://github.com/Wyatex
+// date : {{=fullYear}}-{{=month}}-{{=days}} {{=hours}}:{{=minutes}}
+// desc : {{=it.func.join(it.entity.defName,it.entity.comment,'，')}} controller - service 传输数据类型定义
+package model
+
+$blankline
+
+import (
+	"github.com/gogf/gf/v2/os/gtime"
+	"pdmaner-test/internal/model/entity"
+)
+
+$blankline
+
+// {{=it.func.camel(it.entity.defKey,true)}}AddInput 添加{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+type {{=it.func.camel(it.entity.defKey,true)}}AddInput struct {
+    {{~fields:field:index}}
+    {{=it.func.camel(field.defKey,true)}} {{=field.type}} // {{=field.defName}}
+    {{~}}
+    CreatedBy string // 创建者
+}
+
+$blankline
+
+// {{=it.func.camel(it.entity.defKey,true)}}FindPageInput 分页查找{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+type {{=it.func.camel(it.entity.defKey,true)}}FindPageInput struct {
+    {{~fields:field:index}}
+    {{=it.func.camel(field.defKey,true)}} {{=field.type}} // {{=field.defName}}
+    {{~}}
+    CreatedStart *gtime.Time // 搜索创建时间范围
+    CreatedEnd *gtime.Time // 搜索创建时间范围
+    UpdatedStart *gtime.Time // 搜索更新时间范围
+    UpdatedEnd *gtime.Time // 搜索更新时间范围
+    PageNo int // 查找第几页
+    PageItem int // 每页个数
+}
+
+$blankline
+
+// {{=it.func.camel(it.entity.defKey,true)}}FindPageOutput 分页查找{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+type {{=it.func.camel(it.entity.defKey,true)}}FindPageOutput struct {
+    List      []entity.{{=it.func.camel(it.entity.defKey,true)}}
+    ItemCount int // 搜索结果有多少个
+    PageCount int // 搜索结果有多少页
+    PageNo int // 查找第几页
+    PageItem int // 每页个数
+}
+
+$blankline
+
+// {{=it.func.camel(it.entity.defKey,true)}}FindListInput 全部查找{{=it.func.join(it.entity.defName,it.entity.comment,'，')}}
+type {{=it.func.camel(it.entity.defKey,true)}}FindListInput struct {
+    {{~fields:field:index}}
+    {{=it.func.camel(field.defKey,true)}} {{=field.type}} // {{=field.defName}}
+    {{~}}
+    CreatedStart *gtime.Time // 搜索创建时间范围
+    CreatedEnd *gtime.Time // 搜索创建时间范围
+    UpdatedStart *gtime.Time // 搜索更新时间范围
+    UpdatedEnd *gtime.Time // 搜索更新时间范围
+}
+
